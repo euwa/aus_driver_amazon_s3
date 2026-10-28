@@ -38,13 +38,12 @@ class FileNameService implements SingletonInterface
      * substituted by '_'
      * Trailing dots are removed
      * @param string $fileName Input string, typically the body of a fileName
-     * @param string $charset Charset of the a fileName (defaults to current charset; depending on context)
      * @return string Output string with any characters not matching [.a-zA-Z0-9_-] is substituted by '_' and trailing dots removed
      * @throws InvalidFileNameException
      */
-    public function sanitizeFileName(string $fileName, string $charset = ''): string
+    public function sanitizeFileName(string $fileName): string
     {
-        $fileName = $this->getCharsetConversionObject()->specCharsToASCII('utf-8', $fileName);
+        $fileName = $this->getCharsetConversionObject()->utf8_char_mapping($fileName);
         // Replace unwanted characters by underscores
         $cleanFileName = preg_replace(
             '/[' . $this->unsafeFilenameCharacterExpression . '\\xC0-\\xFF]/',

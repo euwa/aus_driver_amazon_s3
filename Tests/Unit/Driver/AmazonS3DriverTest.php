@@ -100,7 +100,7 @@ class AmazonS3DriverTest extends TestCase
         $this->s3Client = $this->prophesize(S3Client::class);
         $eventDispatcher = $this->prophesize(EventDispatcher::class);
         $pageRenderer = $this->prophesize(PageRenderer::class);
-        $pageRenderer->addHeaderData(Argument::any())->willReturn(null);
+        $pageRenderer->addHeaderData(Argument::any());
         GeneralUtility::setSingletonInstance(PageRenderer::class, $pageRenderer->reveal());
         $this->driver = new AmazonS3Driver($this->testConfiguration, $this->s3Client->reveal(), $eventDispatcher->reveal());
         $this->driver->setStorageUid(42);

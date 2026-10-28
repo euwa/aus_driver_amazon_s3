@@ -20,9 +20,10 @@ use AUS\AusDriverAmazonS3\Index\Extractor;
 use TYPO3\CMS\Core\Resource\AbstractFile;
 use TYPO3\CMS\Core\Resource\Exception\InvalidUidException;
 use TYPO3\CMS\Core\Resource\FileType;
+use TYPO3\CMS\Core\Resource\File;
 use TYPO3\CMS\Core\Resource\Index\MetaDataRepository;
-use TYPO3\CMS\Core\Resource\ResourceFactory;
 use TYPO3\CMS\Core\Resource\ResourceStorage;
+use TYPO3\CMS\Core\Resource\StorageRepository;
 use TYPO3\CMS\Core\SingletonInterface;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
@@ -31,7 +32,7 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
  */
 class MetaDataUpdateService implements SingletonInterface
 {
-    public function __construct(private readonly ResourceFactory $resourceFactory)
+    public function __construct(private readonly StorageRepository $storageRepository)
     {
     }
 
@@ -53,6 +54,10 @@ class MetaDataUpdateService implements SingletonInterface
         }
 
         $file = $storage->getFile($fileProperties['identifier']);
+        if (!$file instanceof File) {
+            return;
+        }
+
         $imageDimensions = $this->getExtractor()->getImageDimensionsOfRemoteFile($file);
 
         $metaDataRepository = $this->getMetaDataRepository();
@@ -71,8 +76,11 @@ class MetaDataUpdateService implements SingletonInterface
 
     protected function getStorage(int $uid): ResourceStorage
     {
-        $resourceFactory = $this->resourceFactory;
-        return $resourceFactory->getStorageObject($uid);
+        if ($uid < 0) {
+            throw new InvalidUidException('Storage uid must not be negative, ' . $uid . ' given.', 1761645601);
+        }
+
+        return $this->storageRepository->getStorageObject($uid);
     }
 
     protected function getExtractor(): Extractor
