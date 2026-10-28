@@ -17,3 +17,8 @@ services:
       - name: event.listener
         identifier: 'ausDriverAmazonS3'
         event: TYPO3\CMS\Core\Resource\Event\AfterFileUpdatedInIndexEvent
+  AUS\AusDriverAmazonS3\EventListener\PolicyMutatedEventListener:
+    tags:
+      - name: event.listener
+        identifier: 'ausDriverAmazonS3/content-security-policy'
+        event: TYPO3\CMS\Core\Security\ContentSecurityPolicy\Event\PolicyMutatedEvent
