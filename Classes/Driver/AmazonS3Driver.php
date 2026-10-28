@@ -18,7 +18,6 @@ use RuntimeException;
 use TYPO3\CMS\Core\Http\Stream;
 use TYPO3\CMS\Core\Type\ContextualFeedbackSeverity;
 use TYPO3\CMS\Core\Messaging\FlashMessageQueue;
-use TYPO3\CMS\Extbase\Persistence\Generic\Exception\NotImplementedException;
 use TYPO3\CMS\Core\Log\Logger;
 use AUS\AusDriverAmazonS3\Event\GetFileForLocalProcessingEvent;
 use AUS\AusDriverAmazonS3\S3Adapter\MetaInfoDownloadAdapter;
@@ -52,7 +51,8 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\PathUtility;
 use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
 use TYPO3\CMS\Core\Resource\Capabilities;
-use TYPO3\CMS\Frontend\Controller\TypoScriptFrontendController;
+use TYPO3\CMS\Core\Http\NormalizedParams;
+use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * Class AmazonS3Driver
@@ -441,7 +441,6 @@ class AmazonS3Driver extends AbstractHierarchicalFilesystemDriver implements Str
      * Replaces a file with file in local file system.
      *
      * @return bool TRUE if the operation succeeded
-     * @throws NotImplementedException
      */
     public function replaceFile(string $fileIdentifier, string $localFilePath): bool
     {
@@ -1030,7 +1029,7 @@ class AmazonS3Driver extends AbstractHierarchicalFilesystemDriver implements Str
     {
         $protocol = $this->configuration['protocol'] ?? '';
         if ($protocol == 'auto') {
-            $protocol = GeneralUtility::getIndpEnv('TYPO3_SSL') ? 'https://' : 'http://';
+            $protocol = $this->isHttps() ? 'https://' : 'http://';
         }
 
         $baseUrl = $protocol;
@@ -1062,6 +1061,22 @@ class AmazonS3Driver extends AbstractHierarchicalFilesystemDriver implements Str
 
         $this->baseUrl = $baseUrl;
         return $this;
+    }
+
+    /**
+     * Check if the current request uses HTTPS
+     */
+    protected function isHttps(): bool
+    {
+        $request = $GLOBALS['TYPO3_REQUEST'] ?? null;
+        if ($request instanceof ServerRequestInterface) {
+            $normalizedParams = $request->getAttribute('normalizedParams');
+            if ($normalizedParams instanceof NormalizedParams) {
+                return $normalizedParams->isHttps();
+            }
+        }
+
+        return NormalizedParams::createFromServerParams($_SERVER)->isHttps();
     }
 
     /**
@@ -1473,14 +1488,13 @@ class AmazonS3Driver extends AbstractHierarchicalFilesystemDriver implements Str
      * substituted by '_'
      * Trailing dots are removed
      * @param string $fileName Input string, typically the body of a fileName
-     * @param string $charset Charset of the a fileName (defaults to current charset; depending on context)
      * @return string Output string with any characters not matching [.a-zA-Z0-9_-] is substituted by '_' and trailing dots removed
      * @throws Exception\InvalidFileNameException
      */
-    public function sanitizeFileName(string $fileName, string $charset = ''): string
+    public function sanitizeFileName(string $fileName): string
     {
         return GeneralUtility::makeInstance(FileNameService::class)
-            ->sanitizeFileName($fileName, $charset);
+            ->sanitizeFileName($fileName);
     }
 
     /**

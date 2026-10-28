@@ -5,8 +5,6 @@ declare(strict_types=1);
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Resource\Driver\DriverRegistry;
 use AUS\AusDriverAmazonS3\Driver\AmazonS3Driver;
-use TYPO3\CMS\Core\Resource\Index\ExtractorRegistry;
-use AUS\AusDriverAmazonS3\Index\Extractor;
 use TYPO3\CMS\Core\Cache\Backend\TransientMemoryBackend;
 use TYPO3\CMS\Core\Cache\Frontend\VariableFrontend;
 
@@ -20,8 +18,8 @@ $driverRegistry->registerDriverClass(
     'FILE:EXT:' . AmazonS3Driver::EXTENSION_KEY . '/Configuration/FlexForm/AmazonS3DriverFlexForm.xml'
 );
 
-// register extractor
-GeneralUtility::makeInstance(ExtractorRegistry::class)->registerExtractionService(Extractor::class);
+// The extractor is registered automatically via ExtractorInterface (autoconfigured in Services.yaml)
+
 $GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['ausdriveramazons3_metainfocache'] ??= [];
 
 $GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['ausdriveramazons3_requestcache'] ??= [];
